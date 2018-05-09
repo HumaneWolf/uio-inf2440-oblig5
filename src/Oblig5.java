@@ -84,4 +84,54 @@ public class Oblig5 {
     void par(int[] x, int[] y, IntList resX, IntList resY) {
 
     }
+
+    /*
+     *  Helper functions to handle the distance from line equation.
+     */
+
+    /**
+     * Get the A part of the equation defining a line.
+     * @param y1 Y coord of point 1.
+     * @param y2 Y coord of point 2.
+     * @return A.
+     */
+    int getA(int y1, int y2) {
+        return y1 - y2;
+    }
+
+    /**
+     * Get the B prt of the equation defining a line.
+     * @param x1 X coord of point 1.
+     * @param x2 X coord of point 2.
+     * @return B.
+     */
+    int getB(int x1, int x2) {
+        return x2 - x1;
+    }
+
+    /**
+     * Get the C part of the equation defining a line.
+     * @param x1 X coord of point 1.
+     * @param y1 Y coord of point 1.
+     * @param x2 X coord of point 2.
+     * @param y2 Y coord of point 2-
+     * @return The C part of the equation.
+     */
+    int getC(int x1, int y1, int x2, int y2) {
+        return (y2 * x1) - (y1 * x2);
+    }
+
+    /**
+     * Get the relative distance between a point and a line.
+     * Also check the getA, getB, and getC methods.
+     * @param a the A variable defining the line.
+     * @param b the B variable defining the line.
+     * @param c the C variable defining the line.
+     * @param x The X coord of the point.
+     * @param y the Y coord of the point.
+     * @return The relative distance from the line.
+     */
+    int getDistanceFromLine(int a, int b, int c, int x, int y) {
+        return (a * x) + (b * y) + c;
+    }
 }
