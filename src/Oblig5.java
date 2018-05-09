@@ -23,13 +23,15 @@ public class Oblig5 {
         }
 
         n = Integer.parseInt(args[0]);
-        n = Integer.parseInt(args[1]);
+        k = Integer.parseInt(args[1]);
 
         MAX_X = Math.max(10,(int) Math.sqrt(n) * 3); // Same as in NPunkter.
         MAX_Y = MAX_X;
 
         for (int i = 0; i < runs; i++) {
             new Oblig5(i);
+
+            if (true) return; //Temp breakpoint.
         }
 
         Arrays.sort(seqTiming);
@@ -46,42 +48,90 @@ public class Oblig5 {
     public Oblig5(int run) {
         NPunkter17 pre = new NPunkter17(n);
 
-        int[] x = new int[n];
-        int[] y = new int[n];
+        x = new int[n];
+        y = new int[n];
 
         pre.fyllArrayer(x, y);
 
-        int[] seqX = x.clone();
-        int[] seqY = y.clone();
-
-        int[] parX = x.clone();
-        int[] parY = y.clone();
-
-        IntList seqResX = new IntList();
-        IntList seqResY = new IntList();
-        IntList parResX = new IntList();
-        IntList parResY = new IntList();
+        IntList seqRes = new IntList();
+        IntList parRes = new IntList();
 
         // Do sequential tests
         System.out.println("Starting sequential");
         long startTime = System.nanoTime();
-        seq(seqX, seqY, seqResX, seqResY);
+        seq(x, y, seqRes);
         seqTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
         System.out.println("Sequential time: " + seqTiming[run] + "ms.");
+
+        int len = seqRes.len;
+        for (int i = 0; i < len; i++) {
+            System.out.println(seqRes.get(i));
+        }
+
+        new TegnUt(this, seqRes);
+
+        if (true) return; //Temp breakpoint.
 
         // Do parallel tests
         System.out.println("Starting Parallel");
         startTime = System.nanoTime();
-        par(parX, parY, parResX, parResY);
+        par(x, y, parRes);
         parTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
         System.out.println("Parallel time: " + parTiming[run] + "ms.");
     }
 
-    void seq(int[] x, int[] y, IntList resX, IntList resY) {
+    void seq(int[] x, int[] y, IntList res) {
+        int leftMost = 0;
+        int rightMost = 0;
 
+        for (int i = 1; i < x.length; i++) {
+            if (x[i] < x[leftMost]) {
+                leftMost = i;
+            }
+            if (x[i] > x[rightMost]) {
+                rightMost = i;
+            }
+        }
+        if (leftMost == rightMost) {
+            System.out.println("Leftmost cannot be equal rightmost.");
+            System.exit(0);
+        }
+
+        res.add(leftMost);
+        seqRecurse(leftMost, rightMost, x, y, res);
+        //seqRecurse(rightMost, leftMost, x, y, res); // TODO: Fix overflow error.
     }
 
-    void par(int[] x, int[] y, IntList resX, IntList resY) {
+    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res) {
+        int extremePoint = p1;
+        int extremeDistance = 1;
+        int a = getA(y[p1], y[p2]);
+        int b = getB(x[p1], x[p2]);
+        int c = getC(x[p1], y[p1], x[p2], y[p2]);
+        int tempDist;
+
+        // Search for a point.
+        for (int i = 0; i < x.length; i++) {
+            if (i == p1 || i == p2) continue;
+
+            tempDist = getDistanceFromLine(a, b, c, x[i], y[i]);
+            if (tempDist <= 0 && tempDist < extremeDistance) {
+                extremePoint = i;
+                extremeDistance = tempDist;
+            }
+        }
+
+        // If we found a point.
+        if (extremePoint != p1) {
+            seqRecurse(p1, extremePoint, x, y, res);
+            seqRecurse(extremePoint, p2, x, y, res);
+        }
+
+        // Add second point.
+        res.add(p2);
+    }
+
+    void par(int[] x, int[] y, IntList res) {
 
     }
 
