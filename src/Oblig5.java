@@ -47,10 +47,8 @@ public class Oblig5 {
 
     public Oblig5(int run) {
         NPunkter17 pre = new NPunkter17(n);
-
         x = new int[n];
         y = new int[n];
-
         pre.fyllArrayer(x, y);
 
         IntList seqRes = new IntList();
@@ -97,18 +95,24 @@ public class Oblig5 {
             System.exit(0);
         }
 
+        boolean[] pointFound = new boolean[n];
+
         res.add(leftMost);
-        seqRecurse(leftMost, rightMost, x, y, res);
-        //seqRecurse(rightMost, leftMost, x, y, res); // TODO: Fix overflow error.
+        seqRecurse(leftMost, rightMost, x, y, res, pointFound);
+        seqRecurse(rightMost, leftMost, x, y, res, pointFound);
     }
 
-    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res) {
+    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found) {
         int extremePoint = p1;
         int extremeDistance = 1;
         int a = getA(y[p1], y[p2]);
         int b = getB(x[p1], x[p2]);
         int c = getC(x[p1], y[p1], x[p2], y[p2]);
         int tempDist;
+
+        // Mark points as found.
+        found[p1] = true;
+        found[p2] = true;
 
         // Search for a point.
         for (int i = 0; i < x.length; i++) {
@@ -118,13 +122,19 @@ public class Oblig5 {
             if (tempDist <= 0 && tempDist < extremeDistance) {
                 extremePoint = i;
                 extremeDistance = tempDist;
+            } else if (tempDist <= 0 && tempDist == extremeDistance) {
+                if (x[i] < x[extremePoint]) {
+                    extremePoint = i;
+                    extremeDistance = tempDist;
+                }
             }
         }
 
         // If we found a point.
-        if (extremePoint != p1) {
-            seqRecurse(p1, extremePoint, x, y, res);
-            seqRecurse(extremePoint, p2, x, y, res);
+        if (extremePoint != p1 && !found[extremePoint]) {
+            found[extremePoint] = true;
+            seqRecurse(p1, extremePoint, x, y, res, found);
+            seqRecurse(extremePoint, p2, x, y, res, found);
         } else {
             // Add second point.
             res.add(p2);
