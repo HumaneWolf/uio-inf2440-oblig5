@@ -125,6 +125,9 @@ public class Oblig5 {
             } else if (tempDist <= 0 && tempDist == extremeDistance && !found[i]) {
                 // TODO: This part must be fixed to make sure they are added in the right order.
 
+                extremePoint = i;
+                extremeDistance = tempDist;
+
                 /*
                 double distCurrent = (x[extremePoint] - x[p2])^2 + (y[extremePoint] - y[p2])^2;
                 double distNew = (x[i] - x[p2])^2 + (y[i] - y[p2])^2;
