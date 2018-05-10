@@ -65,6 +65,7 @@ public class Oblig5 {
         for (int i = 0; i < len; i++) {
             System.out.println(seqRes.get(i));
         }
+        System.out.println("Antall: " + seqRes.len);
 
         new TegnUt(this, seqRes);
 
@@ -97,12 +98,11 @@ public class Oblig5 {
 
         boolean[] pointFound = new boolean[n];
 
-        res.add(leftMost);
-        seqRecurse(leftMost, rightMost, x, y, res, pointFound);
-        seqRecurse(rightMost, leftMost, x, y, res, pointFound);
+        seqRecurse(leftMost, rightMost, x, y, res, pointFound, 'l');
+        seqRecurse(rightMost, leftMost, x, y, res, pointFound, 'r');
     }
 
-    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found) {
+    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found, char direction) {
         int extremePoint = p1;
         int extremeDistance = 1;
         int a = getA(y[p1], y[p2]);
@@ -123,7 +123,10 @@ public class Oblig5 {
                 extremePoint = i;
                 extremeDistance = tempDist;
             } else if (tempDist <= 0 && tempDist == extremeDistance) {
-                if (x[i] < x[extremePoint]) {
+                if (direction == 'l' && x[i] < x[extremePoint]) {
+                    extremePoint = i;
+                    extremeDistance = tempDist;
+                } else if (direction == 'r' && x[i] > x[extremePoint]) {
                     extremePoint = i;
                     extremeDistance = tempDist;
                 }
@@ -133,8 +136,8 @@ public class Oblig5 {
         // If we found a point.
         if (extremePoint != p1 && !found[extremePoint]) {
             found[extremePoint] = true;
-            seqRecurse(p1, extremePoint, x, y, res, found);
-            seqRecurse(extremePoint, p2, x, y, res, found);
+            seqRecurse(p1, extremePoint, x, y, res, found, direction);
+            seqRecurse(extremePoint, p2, x, y, res, found, direction);
         } else {
             // Add second point.
             res.add(p2);
