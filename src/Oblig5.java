@@ -63,7 +63,7 @@ public class Oblig5 {
 
         int len = seqRes.len;
         for (int i = 0; i < len; i++) {
-            //System.out.println(seqRes.get(i));
+            System.out.println(seqRes.get(i));
         }
         System.out.println("Antall: " + seqRes.len);
 
@@ -122,7 +122,19 @@ public class Oblig5 {
             if (tempDist <= 0 && tempDist < extremeDistance) {
                 extremePoint = i;
                 extremeDistance = tempDist;
-            } else if (tempDist <= 0 && tempDist == extremeDistance) {
+            } else if (tempDist <= 0 && tempDist == extremeDistance && !found[i]) {
+                // TODO: This part must be fixed to make sure they are added in the right order.
+
+                /*
+                double distCurrent = (x[extremePoint] - x[p2])^2 + (y[extremePoint] - y[p2])^2;
+                double distNew = (x[i] - x[p2])^2 + (y[i] - y[p2])^2;
+
+                if (distNew > distCurrent) {
+                    extremePoint = i;
+                    extremeDistance = tempDist;
+                }
+                */
+                /*
                 if (direction == 'l' && x[i] < x[extremePoint]) {
                     extremePoint = i;
                     extremeDistance = tempDist;
@@ -130,17 +142,20 @@ public class Oblig5 {
                     extremePoint = i;
                     extremeDistance = tempDist;
                 }
+                */
             }
         }
 
         // If we found a point.
         if (extremePoint != p1 && !found[extremePoint]) {
-            found[extremePoint] = true;
+            System.out.println("For " + p1 + " and " + p2 + " found " + extremePoint + " at " + extremeDistance);
+
             seqRecurse(p1, extremePoint, x, y, res, found, direction);
             seqRecurse(extremePoint, p2, x, y, res, found, direction);
         } else {
             // Add second point.
             res.add(p2);
+            System.out.println("For " + p1 + " and " + p2 + " found nothing");
         }
     }
 
