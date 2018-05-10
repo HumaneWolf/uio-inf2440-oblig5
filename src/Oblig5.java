@@ -125,10 +125,10 @@ public class Oblig5 {
         if (extremePoint != p1) {
             seqRecurse(p1, extremePoint, x, y, res);
             seqRecurse(extremePoint, p2, x, y, res);
+        } else {
+            // Add second point.
+            res.add(p2);
         }
-
-        // Add second point.
-        res.add(p2);
     }
 
     void par(int[] x, int[] y, IntList res) {
