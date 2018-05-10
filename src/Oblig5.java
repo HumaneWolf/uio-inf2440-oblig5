@@ -63,7 +63,7 @@ public class Oblig5 {
 
         int len = seqRes.len;
         for (int i = 0; i < len; i++) {
-            System.out.println(seqRes.get(i));
+            //System.out.println(seqRes.get(i));
         }
         System.out.println("Antall: " + seqRes.len);
 
