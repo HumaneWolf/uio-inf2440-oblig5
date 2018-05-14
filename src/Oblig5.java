@@ -1,20 +1,13 @@
-import java.util.Arrays;
-
 public class Oblig5 {
-    int[] x;
-    int[] y;
 
-    static int n;
-    static int k;
+    static int k = 0;
+    static int n = 0;
 
     static int MAX_X;
     static int MAX_Y;
 
-    // Timings
-    private static final int runs = 7;
-    private static final int medianIndex = 4;
-    private static double[] seqTiming = new double[runs];
-    private static double[] parTiming = new double[runs];
+    int[] x;
+    int[] y;
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -28,167 +21,157 @@ public class Oblig5 {
         MAX_X = Math.max(10,(int) Math.sqrt(n) * 3); // Same as in NPunkter.
         MAX_Y = MAX_X;
 
-        for (int i = 0; i < runs; i++) {
-            new Oblig5(i);
-
-            if (true) return; //Temp breakpoint.
-        }
-
-        Arrays.sort(seqTiming);
-        Arrays.sort(parTiming);
-
-        System.out.printf("Sequential median : %.3f\n", seqTiming[medianIndex]);
-        System.out.printf(
-                "Parallel median: %.3f Speedup from sequential: %.3f\n",
-                parTiming[medianIndex], (seqTiming[medianIndex] / parTiming[medianIndex])
-        );
-        System.out.println("\nn = " + n);
+        new Oblig5();
     }
 
-    public Oblig5(int run) {
-        NPunkter17 pre = new NPunkter17(n);
+    private Oblig5() {
+        NPunkter17 np = new NPunkter17(n);
+
         x = new int[n];
         y = new int[n];
-        pre.fyllArrayer(x, y);
+        np.fyllArrayer(x, y);
 
-        IntList seqRes = new IntList();
-        IntList parRes = new IntList();
+        IntList seqRes = seq();
 
-        // Do sequential tests
-        System.out.println("Starting sequential");
-        long startTime = System.nanoTime();
-        seq(x, y, seqRes);
-        seqTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
-        System.out.println("Sequential time: " + seqTiming[run] + "ms.");
-
-        int len = seqRes.len;
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < seqRes.len; i++) {
             System.out.println(seqRes.get(i));
         }
-        System.out.println("Antall: " + seqRes.len);
 
-        new TegnUt(this, seqRes);
+        System.out.println("Points: " + seqRes.len);
 
-        if (true) return; //Temp breakpoint.
-
-        // Do parallel tests
-        System.out.println("Starting Parallel");
-        startTime = System.nanoTime();
-        par(x, y, parRes);
-        parTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
-        System.out.println("Parallel time: " + parTiming[run] + "ms.");
+        //new TegnUt(this, seqRes);
     }
 
-    void seq(int[] x, int[] y, IntList res) {
-        int leftMost = 0;
-        int rightMost = 0;
+    private IntList seq() {
+        IntList hull = new IntList();
+        IntList upper = new IntList();
+        IntList lower = new IntList();
 
+        // Find the X extremes.
+        int maxX = 0, minX = 0;
         for (int i = 1; i < x.length; i++) {
-            if (x[i] < x[leftMost]) {
-                leftMost = i;
+            if (x[maxX] < x[i]) {
+                maxX = i;
             }
-            if (x[i] > x[rightMost]) {
-                rightMost = i;
+            if (x[minX] > x[i]) {
+                minX = i;
             }
-        }
-        if (leftMost == rightMost) {
-            System.out.println("Leftmost cannot be equal rightmost.");
-            System.exit(0);
         }
 
-        boolean[] pointFound = new boolean[n];
-        seqRecurse(leftMost, rightMost, x, y, res, pointFound);
-        seqRecurse(rightMost, leftMost, x, y, res, pointFound);
+        // Split points into two lists.
+        for (int i = 0; i < x.length; i++) {
+            if (i == maxX || i == minX) continue;
+
+            if (getDistanceFromLine(i, maxX, minX) <= 0) {
+                upper.add(i);
+            }
+            if (getDistanceFromLine(i, maxX, minX) >= 0) {
+                lower.add(i);
+            }
+        }
+
+        // Recursive calls
+        seqRec(
+                maxX,
+                minX,
+                getHighestDistance(maxX, minX, upper),
+                upper,
+                hull
+        );
+        hull.add(minX);
+
+        seqRec(
+                minX,
+                maxX,
+                getHighestDistance(minX, maxX, lower),
+                lower,
+                hull
+        );
+
+        hull.add(maxX);
+
+        return hull;
     }
 
-    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found) {
-        int extremePoint = p1;
+    private void seqRec(int p1, int p2, int p3, IntList list, IntList hull) {
+        IntList outerPoints = getOuterPoints(p1, p3, list);
+        int point = getHighestDistance(p1, p3, outerPoints);
+        if (point != -1) {
+            seqRec(
+                    p1, p3, point,
+                    outerPoints,
+                    hull
+            );
+        }
+
+        hull.add(p3);
+
+        outerPoints = getOuterPoints(p3, p2, list);
+        point = getHighestDistance(p3, p2, outerPoints);
+        if (point != -1) {
+            seqRec(
+                    p3, p2, point,
+                    outerPoints,
+                    hull
+            );
+        }
+    }
+
+    private int getDistanceFromLine(int p3, int p1, int p2) {
+        int a = y[p1] - y[p2];
+        int b = x[p2] - x[p1];
+        int c = y[p2] * x[p1] - y[p1] * x[p2];
+        return a * x[p3] + b * y[p3] + c;
+    }
+
+    private int getHighestDistance(int p1, int p2, IntList list) {
+        int extremePoint = -1;
         int extremeDistance = 1;
-        int a = getA(y[p1], y[p2]);
-        int b = getB(x[p1], x[p2]);
-        int c = getC(x[p1], y[p1], x[p2], y[p2]);
+
+        int point;
         int tempDist;
 
-        // Search for a point.
-        for (int i = 0; i < x.length; i++) {
-            if (i == p1 || i == p2) continue;
+        for (int i = 0; i < list.len; i++) {
+            point = list.get(i);
 
-            tempDist = getDistanceFromLine(a, b, c, x[i], y[i]);
-            if (tempDist <= 0 && tempDist < extremeDistance) {
-                extremePoint = i;
-                extremeDistance = tempDist;
-            } else if (tempDist <= 0 && tempDist == extremeDistance && !found[i]) {
-                extremePoint = i;
+            tempDist = getDistanceFromLine(point, p1, p2);
+            if (tempDist < extremeDistance) {
+                if (tempDist == 0 && !isBetweenOuterPoints(point, p1, p2))
+                    continue;
+
+                extremePoint = point;
                 extremeDistance = tempDist;
             }
         }
 
-        // If we found a point.
-        if (extremePoint != p1 && !found[extremePoint]) {
-            System.out.println("For " + p1 + " and " + p2 + " found " + extremePoint + " at " + extremeDistance);
+        return extremePoint;
+    }
 
-            found[extremePoint] = true;
+    private IntList getOuterPoints(int p1, int p2, IntList list) {
+        IntList outer = new IntList();
+        int point;
 
-            seqRecurse(p1, extremePoint, x, y, res, found);
-            seqRecurse(extremePoint, p2, x, y, res, found);
-        } else {
-            // Add point to hull.
-            res.add(p2);
-            System.out.println("For " + p1 + " and " + p2 + " found nothing");
+        for (int i = 0; i < list.len; i++) {
+            point = list.get(i);
+
+            if (point == p1 || point == p2) continue;
+
+            if (getDistanceFromLine(point, p1, p2) <= 0) {
+                outer.add(point);
+            }
         }
+
+        return outer;
     }
 
-    void par(int[] x, int[] y, IntList res) {
+    private boolean isBetweenOuterPoints(int p3, int p1, int p2){
+        double distanceAB = Math.sqrt( Math.pow((x[p2] - x[p1]), 2) + Math.pow((y[p2] - y[p1]), 2) );
+        double distanceAC = Math.sqrt( Math.pow((x[p3] - x[p1]), 2) + Math.pow((y[p3] - y[p1]), 2) );
+        double distanceBC = Math.sqrt( Math.pow((x[p3] - x[p2]), 2) + Math.pow((y[p3] - y[p2]), 2) );
 
-    }
-
-    /*
-     *  Helper functions to handle the distance from line equation.
-     */
-
-    /**
-     * Get the A part of the equation defining a line.
-     * @param y1 Y coord of point 1.
-     * @param y2 Y coord of point 2.
-     * @return A.
-     */
-    int getA(int y1, int y2) {
-        return y1 - y2;
-    }
-
-    /**
-     * Get the B prt of the equation defining a line.
-     * @param x1 X coord of point 1.
-     * @param x2 X coord of point 2.
-     * @return B.
-     */
-    int getB(int x1, int x2) {
-        return x2 - x1;
-    }
-
-    /**
-     * Get the C part of the equation defining a line.
-     * @param x1 X coord of point 1.
-     * @param y1 Y coord of point 1.
-     * @param x2 X coord of point 2.
-     * @param y2 Y coord of point 2-
-     * @return The C part of the equation.
-     */
-    int getC(int x1, int y1, int x2, int y2) {
-        return (y2 * x1) - (y1 * x2);
-    }
-
-    /**
-     * Get the relative distance between a point and a line.
-     * Also check the getA, getB, and getC methods.
-     * @param a the A variable defining the line.
-     * @param b the B variable defining the line.
-     * @param c the C variable defining the line.
-     * @param x The X coord of the point.
-     * @param y the Y coord of the point.
-     * @return The relative distance from the line.
-     */
-    int getDistanceFromLine(int a, int b, int c, int x, int y) {
-        return (a * x) + (b * y) + c;
+        if(distanceAB > distanceAC && distanceAB > distanceBC){
+            return true;
+        }
+        return false;
     }
 }
