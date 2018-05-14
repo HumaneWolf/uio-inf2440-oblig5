@@ -97,8 +97,9 @@ public class Oblig5 {
         }
 
         boolean[] pointFound = new boolean[n];
-
         seqRecurse(leftMost, rightMost, x, y, res, pointFound, 'l');
+
+        //pointFound = new boolean[n];
         seqRecurse(rightMost, leftMost, x, y, res, pointFound, 'r');
     }
 
@@ -110,10 +111,6 @@ public class Oblig5 {
         int c = getC(x[p1], y[p1], x[p2], y[p2]);
         int tempDist;
 
-        // Mark points as found.
-        found[p1] = true;
-        found[p2] = true;
-
         // Search for a point.
         for (int i = 0; i < x.length; i++) {
             if (i == p1 || i == p2) continue;
@@ -123,29 +120,8 @@ public class Oblig5 {
                 extremePoint = i;
                 extremeDistance = tempDist;
             } else if (tempDist <= 0 && tempDist == extremeDistance && !found[i]) {
-                // TODO: This part must be fixed to make sure they are added in the right order.
-
                 extremePoint = i;
                 extremeDistance = tempDist;
-
-                /*
-                double distCurrent = (x[extremePoint] - x[p2])^2 + (y[extremePoint] - y[p2])^2;
-                double distNew = (x[i] - x[p2])^2 + (y[i] - y[p2])^2;
-
-                if (distNew > distCurrent) {
-                    extremePoint = i;
-                    extremeDistance = tempDist;
-                }
-                */
-                /*
-                if (direction == 'l' && x[i] < x[extremePoint]) {
-                    extremePoint = i;
-                    extremeDistance = tempDist;
-                } else if (direction == 'r' && x[i] > x[extremePoint]) {
-                    extremePoint = i;
-                    extremeDistance = tempDist;
-                }
-                */
             }
         }
 
@@ -153,10 +129,12 @@ public class Oblig5 {
         if (extremePoint != p1 && !found[extremePoint]) {
             System.out.println("For " + p1 + " and " + p2 + " found " + extremePoint + " at " + extremeDistance);
 
+            found[extremePoint] = true;
+
             seqRecurse(p1, extremePoint, x, y, res, found, direction);
             seqRecurse(extremePoint, p2, x, y, res, found, direction);
         } else {
-            // Add second point.
+            // Add point to hull.
             res.add(p2);
             System.out.println("For " + p1 + " and " + p2 + " found nothing");
         }
