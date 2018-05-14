@@ -98,8 +98,6 @@ public class Oblig5 {
 
         boolean[] pointFound = new boolean[n];
         seqRecurse(leftMost, rightMost, x, y, res, pointFound);
-
-        //pointFound = new boolean[n];
         seqRecurse(rightMost, leftMost, x, y, res, pointFound);
     }
 
