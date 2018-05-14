@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Oblig5 {
 
     static int k = 0;
@@ -8,6 +10,12 @@ public class Oblig5 {
 
     int[] x;
     int[] y;
+
+    // Timings
+    private static final int runs = 7;
+    private static final int medianIndex = 4;
+    private static double[] seqTiming = new double[runs];
+    private static double[] parTiming = new double[runs];
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -21,25 +29,45 @@ public class Oblig5 {
         MAX_X = Math.max(10,(int) Math.sqrt(n) * 3); // Same as in NPunkter.
         MAX_Y = MAX_X;
 
-        new Oblig5();
+        for (int i = 0; i < runs; i++) {
+            new Oblig5(i);
+        }
+
+        Arrays.sort(seqTiming);
+        Arrays.sort(parTiming);
+
+        System.out.printf("Sequential median : %.3f\n", seqTiming[medianIndex]);
+        System.out.printf(
+                "Parallel median: %.3f Speedup from sequential: %.3f\n",
+                parTiming[medianIndex], (seqTiming[medianIndex] / parTiming[medianIndex])
+        );
+        System.out.println("\nn = " + n);
     }
 
-    private Oblig5() {
+    private Oblig5(int run) {
         NPunkter17 np = new NPunkter17(n);
 
         x = new int[n];
         y = new int[n];
         np.fyllArrayer(x, y);
 
+        // Do sequential tests
+        System.out.println("Starting sequential");
+        long startTime = System.nanoTime();
         IntList seqRes = seq();
+        seqTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
+        System.out.println("SEQ time: " + seqTiming[run] + "ms.");
+        System.out.println("SEQ points: " + seqRes.len);
 
-        for (int i = 0; i < seqRes.len; i++) {
-            System.out.println(seqRes.get(i));
-        }
+        // Do parallel tests
+        System.out.println("Starting Parallel");
+        startTime = System.nanoTime();
+        IntList parRes = par();
+        parTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
+        System.out.println("PAR time: " + parTiming[run] + "ms.");
+        //System.out.println("SEQ points: " + seqRes.len);
 
-        System.out.println("Points: " + seqRes.len);
-
-        //new TegnUt(this, seqRes);
+        //new TegnUt(this, parRes);
     }
 
     private IntList seq() {
@@ -173,5 +201,9 @@ public class Oblig5 {
             return true;
         }
         return false;
+    }
+
+    private IntList par() {
+        return null;
     }
 }
