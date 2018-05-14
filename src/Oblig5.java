@@ -97,13 +97,13 @@ public class Oblig5 {
         }
 
         boolean[] pointFound = new boolean[n];
-        seqRecurse(leftMost, rightMost, x, y, res, pointFound, 'l');
+        seqRecurse(leftMost, rightMost, x, y, res, pointFound);
 
         //pointFound = new boolean[n];
-        seqRecurse(rightMost, leftMost, x, y, res, pointFound, 'r');
+        seqRecurse(rightMost, leftMost, x, y, res, pointFound);
     }
 
-    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found, char direction) {
+    void seqRecurse(int p1, int p2, int[] x, int[] y, IntList res, boolean[] found) {
         int extremePoint = p1;
         int extremeDistance = 1;
         int a = getA(y[p1], y[p2]);
@@ -131,8 +131,8 @@ public class Oblig5 {
 
             found[extremePoint] = true;
 
-            seqRecurse(p1, extremePoint, x, y, res, found, direction);
-            seqRecurse(extremePoint, p2, x, y, res, found, direction);
+            seqRecurse(p1, extremePoint, x, y, res, found);
+            seqRecurse(extremePoint, p2, x, y, res, found);
         } else {
             // Add point to hull.
             res.add(p2);
