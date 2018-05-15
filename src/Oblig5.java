@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.concurrent.CyclicBarrier;
 
 public class Oblig5 {
 
@@ -65,7 +66,7 @@ public class Oblig5 {
         IntList parRes = par();
         parTiming[run] = (System.nanoTime() - startTime) / 1000000.0;
         System.out.println("PAR time: " + parTiming[run] + "ms.");
-        //System.out.println("SEQ points: " + seqRes.len);
+        System.out.println("PAR points: " + seqRes.len);
 
         //new TegnUt(this, parRes);
     }
@@ -197,13 +198,147 @@ public class Oblig5 {
         double distanceAC = Math.sqrt( Math.pow((x[p3] - x[p1]), 2) + Math.pow((y[p3] - y[p1]), 2) );
         double distanceBC = Math.sqrt( Math.pow((x[p3] - x[p2]), 2) + Math.pow((y[p3] - y[p2]), 2) );
 
-        if(distanceAB > distanceAC && distanceAB > distanceBC){
+        if (distanceAB > distanceAC && distanceAB > distanceBC) {
             return true;
         }
         return false;
     }
 
     private IntList par() {
-        return null;
+        IntList hull = new IntList();
+        IntList[] localHulls = new IntList[k];
+        IntList potentialHull = new IntList();
+        Thread[] threads = new Thread[k];
+
+        CyclicBarrier cb = new CyclicBarrier(k);
+
+        // Run algorithm for the split version of the list.
+        for (int i = 0; i < k; i++) {
+            localHulls[i] = new IntList();
+            threads[i] = new Thread(new Worker(i, localHulls[i]));
+            threads[i].start();
+        }
+
+        // Wait for the threads to finish and combine local hulls.
+        for (int i = 0; i < k; i++) {
+            try {
+                threads[i].join();
+
+                potentialHull.append(localHulls[i]);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Find global hull.
+        int point;
+        // Find the X extremes.
+        int maxX = potentialHull.get(0), minX = 0;
+        for (int i = 1; i < potentialHull.len; i++) {
+            point = potentialHull.get(i);
+
+            if (x[maxX] < x[point]) {
+                maxX = point;
+            }
+            if (x[minX] > x[point]) {
+                minX = point;
+            }
+        }
+
+        // Split points into two lists.
+        IntList upper = new IntList();
+        IntList lower = new IntList();
+        for (int i = 0; i < potentialHull.len; i++) {
+            point = potentialHull.get(i);
+
+            if (point == maxX || point == minX) continue;
+
+            if (getDistanceFromLine(point, maxX, minX) <= 0) {
+                upper.add(point);
+            }
+            if (getDistanceFromLine(point, maxX, minX) >= 0) {
+                lower.add(point);
+            }
+        }
+
+        // Recursive calls
+        seqRec(
+                maxX,
+                minX,
+                getHighestDistance(maxX, minX, upper),
+                upper,
+                hull
+        );
+        hull.add(minX);
+
+        seqRec(
+                minX,
+                maxX,
+                getHighestDistance(minX, maxX, lower),
+                lower,
+                hull
+        );
+
+        hull.add(maxX);
+
+        return hull;
+    }
+
+    private class Worker implements Runnable {
+        int id;
+        IntList hull;
+
+        Worker(int id, IntList hull) {
+            this.id = id;
+            this.hull = hull;
+        }
+
+        @Override
+        public void run() {
+            // Find max and min X in the local points.
+            int maxX = 0, minX = 0;
+            for (int i = id; i < x.length; i += k) {
+                if (x[maxX] < x[i]) {
+                    maxX = i;
+                }
+                if (x[minX] > x[i]) {
+                    minX = i;
+                }
+            }
+
+            // Split into upper and lower lists.
+            IntList upper = new IntList();
+            IntList lower = new IntList();
+            for (int i = id; i < x.length; i += k) {
+                if (i == maxX || i == minX) continue;
+
+                if (getDistanceFromLine(i, maxX, minX) <= 0) {
+                    upper.add(i);
+                }
+                if (getDistanceFromLine(i, maxX, minX) >= 0) {
+                    lower.add(i);
+                }
+            }
+
+            // Recursive calls
+            seqRec(
+                    maxX,
+                    minX,
+                    getHighestDistance(maxX, minX, upper),
+                    upper,
+                    hull
+            );
+            hull.add(minX);
+
+            seqRec(
+                    minX,
+                    maxX,
+                    getHighestDistance(minX, maxX, lower),
+                    lower,
+                    hull
+            );
+
+            hull.add(maxX);
+        }
     }
 }
